@@ -47,12 +47,13 @@
 #include <list>
 #include <algorithm>
 #include <functional>
+const int PacketSizeHack = 256 + 128;
 
 namespace net
 {
 	// platform independent wait for n seconds
 
-	const int PacketSizeHack = 256 + 128;
+	
 
 #if PLATFORM == PLATFORM_WINDOWS
 
@@ -155,7 +156,7 @@ namespace net
 	{
 #if PLATFORM == PLATFORM_WINDOWS
 		WSADATA WsaData;
-		return WSAStartup(MAKEWORD(2, 2), &WsaData) != NO_ERROR;
+		return WSAStartup(MAKEWORD(2, 2), &WsaData) == NO_ERROR;
 #else
 		return true;
 #endif
@@ -204,7 +205,7 @@ namespace net
 			address.sin_addr.s_addr = INADDR_ANY;
 			address.sin_port = htons((unsigned short)port);
 
-			if (bind(::socket, (const sockaddr*)&address, sizeof(sockaddr_in)) < 0)
+			if (::bind(socket, (const sockaddr*)&address, sizeof(sockaddr_in)) < 0)
 			{
 				printf("failed to bind socket\n");
 				Close();
@@ -451,7 +452,7 @@ namespace net
 			packet[2] = (unsigned char)((protocolId >> 8) & 0xFF);
 			packet[3] = (unsigned char)((protocolId) & 0xFF);
 			std::memcpy(&packet[4], data, size);
-			return socket.Send(address, packet, size + 4);
+			return socket.Send(address, packet, PacketSizeHack + 4);
 		}
 
 		virtual int ReceivePacket(unsigned char data[], int size)
@@ -459,7 +460,7 @@ namespace net
 			assert(running);
 			unsigned char packet[PacketSizeHack + 4];
 			Address sender;
-			int bytes_read = socket.Receive(sender, packet, size + 4);
+			int bytes_read = socket.Receive(sender, packet, PacketSizeHack + 4);
 			if (bytes_read == 0)
 				return 0;
 			if (bytes_read <= 4)
