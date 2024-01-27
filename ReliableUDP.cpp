@@ -8,7 +8,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-
+#include "FileHandler.h"    // included File handler file for handling the files in this code
 #include "Net.h"
 
 //#define SHOW_ACKS
@@ -120,6 +120,8 @@ int main(int argc, char* argv[])
 {
 	// parse command line
 
+	FileHandler fileHandler;   // created a object of FileHandler class 
+
 	enum Mode
 	{
 		Client,
@@ -159,7 +161,13 @@ int main(int argc, char* argv[])
 	}
 
 	if (mode == Client)
+
+		// here if the mode is client I want to receive the file from the disc
 		connection.Connect(address);
+
+	/*
+	* Here I will implement the loading file and sending its metadata when connection is established
+	*/
 	else
 		connection.Listen();
 
