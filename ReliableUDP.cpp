@@ -167,6 +167,7 @@ int main(int argc, char* argv[])
 
 	/*
 	* Here I will implement the loading file and sending its metadata when connection is established
+	* Apart from that I will break the file into the chuncks in order to send it tot the sever
 	*/
 	else
 		connection.Listen();
@@ -190,6 +191,11 @@ int main(int argc, char* argv[])
 
 		if (mode == Server && connected && !connection.IsConnected())
 		{
+			// Here I will implement receiving the metadata of file when server is finally connected to the client
+			/*
+			* After receiving the metadata I will write out the received pieces 
+			* finally I will verify the integrity of the file after receiving the file's metadata and content if its correct then I will send the file for acknowledgement
+			*/
 			flowControl.Reset();
 			printf("reset flow control\n");
 			connected = false;
