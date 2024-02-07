@@ -13,10 +13,10 @@ public:
 	//defined a method to read the file content
 	bool ReadFileContent(const std::string& filePath, std::vector<char>& fileContent);
 
-	//defined a mathod to calculate crc32 checksome to check file integrity
-	uint32_t CalculateCRC32(const std::vector<char>& data);
+	//defined a mathod to calculate MD5 checksome to check file integrity
+	uint32_t CalculateMD5(const std::vector<char>& data);
 
 private:
 	//internal mehtod to support checksum method
-	uint32_t CalculateCRC32Internal(const char* data, size_t size);
+	uint32_t CalculateMD5Internal(const char* data, size_t size);
 };
