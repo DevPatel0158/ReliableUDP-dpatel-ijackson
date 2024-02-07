@@ -21,6 +21,9 @@
     <ClCompile Include="FileHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="md5.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Net.h">
@@ -29,5 +32,11 @@
     <ClInclude Include="FileHandler.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="md5.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>
