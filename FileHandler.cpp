@@ -1,5 +1,6 @@
 #include "md5.h"
 #include "FileHandler.h"
+#include "Net.h"
 
 
 
@@ -35,6 +36,22 @@ uint32_t FileHandler::CalculateMD5(const std::vector<char>& data)
 {
 
 	return CalculateMD5Internal(data.data(), data.size());
+}
+
+void FileHandler::SendFileMetadata(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
+{
+}
+
+void FileHandler::SendFileContent(const std::vector<char>& fileContent, ReliableConnection& connection)
+{
+}
+
+void FileHandler::ReceiveFileMetadata(std::string& fileName, size_t& fileSize, ReliableConnection& connection)
+{
+}
+
+void FileHandler::ReceiveFileContentAndVerify(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
+{
 }
 
 uint32_t FileHandler::CalculateMD5Internal(const char* data, size_t size)

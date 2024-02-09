@@ -1,7 +1,10 @@
 #pragma once
+#include "Net.h"
 #include <string>
 #include <fstream>
 #include <vector>
+
+
 
 class FileHandler {
 public:
@@ -15,6 +18,18 @@ public:
 
 	//defined a mathod to calculate MD5 checksome to check file integrity
 	uint32_t CalculateMD5(const std::vector<char>& data);
+
+	//defined a method to send file metadata
+	static void SendFileMetadata(const std::string& fileName, size_t fileSize, ReliableConnection& connection);
+
+	//defined a function to send filecontent
+	static void SendFileContent(const std::vector<char>& fileContent, ReliableConnection& connection);
+
+	//defined a method to receive metadata
+	static void ReceiveFileMetadata(std::string& fileName, size_t& fileSize, ReliableConnection& connection);
+
+	//defined a function that receives file content and validates verify the hash received from md5
+	static void ReceiveFileContentAndVerify(const std::string& fileName, size_t fileSize, ReliableConnection& connection);
 
 private:
 	//internal mehtod to support checksum method
