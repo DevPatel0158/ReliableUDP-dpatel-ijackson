@@ -1,5 +1,7 @@
+#include "md5.h"
 #include "FileHandler.h"
-#include <openssl/md5.h>
+
+
 
 
 FileHandler::FileHandler()
@@ -31,10 +33,18 @@ bool FileHandler::ReadFileContent(const std::string& filePath, std::vector<char>
 
 uint32_t FileHandler::CalculateMD5(const std::vector<char>& data)
 {
-	return 0;
+
+	return CalculateMD5Internal(data.data(), data.size());
 }
 
 uint32_t FileHandler::CalculateMD5Internal(const char* data, size_t size)
 {
-	return 0;
+	MD5 md5; //creating instatnce of md5 method 
+	md5.update(reinterpret_cast<const unsigned char*>(data), size);
+	md5.finalize();
+
+	//converted first 4 bytes of the hashi into uint32
+	const unsigned char* digest = reinterpret_cast<const unsigned char*>(md5.hexdigest().c_str());
+	uint32_t result = static_cast<uint32_t>(digest[0]) | (static_cast<uint32_t>(digest[1]) << 8) | (static_cast<uint32_t>(digest[2]) << 16) | (static_cast<uint32_t>(digest[3]) << 24);
+	return result;  // this function will return the hash value
 }
