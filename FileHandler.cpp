@@ -20,6 +20,12 @@ bool FileHandler::GetFileInfo(const std::string& filePath, std::string& fileName
 
 bool FileHandler::ReadFileContent(const std::string& filePath, std::vector<char>& fileContent)
 {
+	std::ifstream file(filePath, std::ios::binary);
+	if (file.is_open())
+	{
+		fileContent.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+		return true;
+	}
 	return false;
 }
 
