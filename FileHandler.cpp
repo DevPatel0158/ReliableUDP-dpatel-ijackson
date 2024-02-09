@@ -8,6 +8,13 @@ FileHandler::FileHandler()
 
 bool FileHandler::GetFileInfo(const std::string& filePath, std::string& fileName, size_t& fileSize)
 {
+	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
+	if (file.is_open())
+	{
+		fileSize = static_cast<size_t>(file.tellg());
+		fileName = filePath.substr(filePath.find_last_of('/') + 1);  // extracting file name from the path it is coming 
+		return true;
+	}
 	return false;
 }
 

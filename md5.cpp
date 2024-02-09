@@ -36,6 +36,10 @@ documentation and/or software.
 /* system implementation headers */
 #include <cstdio>
 
+//disabled sprintf function warning with pragma 
+#pragma warning(disable : 4996)
+
+
 
 // Constants for MD5Transform routine.
 #define S11 7
