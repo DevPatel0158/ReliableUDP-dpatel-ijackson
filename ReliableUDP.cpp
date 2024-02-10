@@ -160,7 +160,48 @@ int main(int argc, char* argv[])
 	}
 
 	if (mode == Client) {
+		inputFile = fopen(fileName, "rb");
+		if (inputFile == NULL) {
+			printf("ERROR: Opening file\n");
+			return 0;
+		}
 
+		while (sendAccumulator > 1.0f / sendRate) {
+			sizeOfFileName = strlen(fileName);
+
+
+			memset(packet, 0, sizeof(packet));
+
+			if (packetStage == 0) {
+				sizeOfInputFile = sizeof(fileName);
+				packetStage++;
+				memcpy(packet, fileName, sizeOfFileName);
+				printf("Sending name of the file : %s (stage 1)\n", fileName);
+			}
+			else if (packetStage == 1) {
+				packetStage++;
+				memcpy(packet, &sizeOfInputFile, sizeOfFileName);
+				printf("Sending the size of the file! : %d (stage 2)\n", sizeOfInputFile);
+			}
+			else if (packetStage == 2) {
+				memcpy(packet, hashMD5String.c_str(), MD5_HASH_SIZE);
+				printf("Sending the hash of the file! : %s (stage 3)\n ", hashMD5String.c_str());
+				packetStage++;
+			}
+			else//writes the file data
+			{
+				sizeOfInputFile = fread(packet, sizeof(char), PacketSize, inputFile);//reads all the data into the packet.
+				if (sizeOfInputFile != 0)//checks for the breakfile flag and the size to change the data being sent.
+				{
+					packet[0] = 'A';
+					sizeOfInputFile--;
+				}
+				printf("OUT\n");
+			}
+			printf("PACKET: %s PCAKET SIZE : %i", packet, sizeof(packet));
+			connection.SendPacket(packet, sizeof(packet));
+			sendAccumulator -= 1.0f / sendRate;
+		}
 	}
 
 		
