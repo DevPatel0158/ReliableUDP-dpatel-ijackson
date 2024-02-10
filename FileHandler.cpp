@@ -65,6 +65,27 @@ void FileHandler::ReceiveFileMetadata(std::string& fileName, size_t& fileSize, R
 
 void FileHandler::ReceiveFileContentAndVerify(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
 {
+	std::vector<char> fileContent(fileSize, 0);
+	connection.ReceivePacket(fileContent.data(), fileContent.size());  // received file content
+
+	uint32_t receivedMd5Hash = CalculateMD5(fileContent); /// calculated the md5 hash for the received file
+
+
+	std::vector<char> ackPacket(AckPacketSize, 0);
+	connection.ReceivePacket(ackPacket.data(), ackPacket.size());   //received acked packet 
+
+	uint32_t sentMd5Hash;
+	sscanf(ackPacket.data(), "ACK|%u", &sentMd5Hash);  // parsed received md5 hash 
+
+	if (receivedMd5Hash == sentMd5Hash)     // checking and verifying integrity with comparing md5 hashes
+	{
+		printf("File transfer successful. Integrity verified.\n");
+	}
+	else
+	{
+		
+		printf("File transfer failed. Integrity verification failed.\n");
+	}
 }
 
 uint32_t FileHandler::CalculateMD5Internal(const char* data, size_t size)
