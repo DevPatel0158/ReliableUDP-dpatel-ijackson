@@ -1,8 +1,10 @@
-
+#include "Net.h"
 #include "FileHandler.h"
 #include "md5.h"
+#include "ReliableUDP.cpp"
 
-
+constexpr int AckPacketSize = 128;
+constexpr int MetadataPacketSize =64 ;
 
 
 FileHandler::FileHandler()
@@ -41,41 +43,47 @@ uint32_t FileHandler::CalculateMD5(const std::vector<char>& data)
 void FileHandler::SendFileMetadata(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
 {
 	std::vector<char> metadataPacket(MetadataPacketSize, 0);  // created a metadata packet
-	snprintf(metadataPacket.data(), MetadataPacketSize, "META|%s|%zu", fileName.c_str(), fileSize);
-	connection.SendPacket(metadataPacket.data(), metadataPacket.size()); // sending the metadata packets
+	snprintf(metadataPacket.data(), MetadataPacketSize, "META|%s|%lu", fileName.c_str(), static_cast<unsigned long>(fileSize));
+
+	connection.SendPacket(reinterpret_cast<const unsigned char*>(metadataPacket.data()), metadataPacket.size()); // sending the metadata packets
 }
 
 void FileHandler::SendFileContent(const std::vector<char>& fileContent, ReliableConnection& connection)
 {
 	uint32_t md5Hash = CalculateMD5(fileContent);   // calculating md5 hash
-	connection.SendPacket(fileContent.data(), fileContent.size()); //Sending the file content
+	connection.SendPacket(reinterpret_cast<const unsigned char*>(fileContent.data()), static_cast<int>(fileContent.size())); //Sending the file content
 
 	std::vector<char> ackPacket(AckPacketSize, 0);
 	snprintf(ackPacket.data(), ackPacket.size(), "ACK|%u", md5Hash);
-	connection.SendPacket(fileContent.data(), fileContent.size());   // sending acknowledgement
+	connection.SendPacket(reinterpret_cast<const unsigned char*>(fileContent.data()), static_cast<int>(fileContent.size()));
+
+
 }
 
 void FileHandler::ReceiveFileMetadata(std::string& fileName, size_t& fileSize, ReliableConnection& connection)
 {
 	std::vector<char> metadataPacket(MetadataPacketSize, 0);
-	connection.SendPacket(metadataPacket.data(), metadataPacket.size());
+	connection.SendPacket(reinterpret_cast<const unsigned char*>(metadataPacket.data()), static_cast<int>(metadataPacket.size()));
 
-	sscanf(metadataPacket.data(), "META|%[^|]|%zu", fileName.data(), &fileSize);  // parsing the metadata
+
+	sscanf_s(metadataPacket.data(), "META|%[^|]|%zu", fileName.data(), &fileSize); // parsing the metadata
 }
 
 void FileHandler::ReceiveFileContentAndVerify(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
 {
-	std::vector<char> fileContent(fileSize, 0);
-	connection.ReceivePacket(fileContent.data(), fileContent.size());  // received file content
+	std::vector<char> fileContent;
+
+	std::vector<char> ackPacket(AckPacketSize, 0);
+	connection.ReceivePacket(reinterpret_cast<unsigned char*>(ackPacket.data()), static_cast<int>(ackPacket.size())); // received file content
 
 	uint32_t receivedMd5Hash = CalculateMD5(fileContent); /// calculated the md5 hash for the received file
 
 
-	std::vector<char> ackPacket(AckPacketSize, 0);
-	connection.ReceivePacket(ackPacket.data(), ackPacket.size());   //received acked packet 
+
+	connection.ReceivePacket(reinterpret_cast<unsigned char*>(ackPacket.data()), ackPacket.size()); //received acked packet 
 
 	uint32_t sentMd5Hash;
-	sscanf(ackPacket.data(), "ACK|%u", &sentMd5Hash);  // parsed received md5 hash 
+	sscanf_s(ackPacket.data(), "ACK|%u", &sentMd5Hash); // parsed received md5 hash 
 
 	if (receivedMd5Hash == sentMd5Hash)     // checking and verifying integrity with comparing md5 hashes
 	{

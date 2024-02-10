@@ -1,8 +1,11 @@
 #pragma once
-#include "Net.h"
+
 #include <string>
 #include <fstream>
 #include <vector>
+#include "Net.h"
+#include "ReliableUDP.cpp"
+
 
 
 
@@ -17,7 +20,7 @@ public:
 	bool ReadFileContent(const std::string& filePath, std::vector<char>& fileContent);
 
 	//defined a mathod to calculate MD5 checksome to check file integrity
-	uint32_t CalculateMD5(const std::vector<char>& data);
+	static uint32_t CalculateMD5(const std::vector<char>& data);
 
 	//defined a method to send file metadata
 	static void SendFileMetadata(const std::string& fileName, size_t fileSize, ReliableConnection& connection);
@@ -34,5 +37,5 @@ public:
 
 private:
 	//internal mehtod to support checksum method
-	uint32_t CalculateMD5Internal(const char* data, size_t size);
+	static uint32_t CalculateMD5Internal(const char* data, size_t size);
 };
