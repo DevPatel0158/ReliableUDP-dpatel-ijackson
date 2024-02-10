@@ -40,17 +40,27 @@ uint32_t FileHandler::CalculateMD5(const std::vector<char>& data)
 
 void FileHandler::SendFileMetadata(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
 {
-	std::vector<char> metadataPacket(MetadataPacketSize, 0);  // created a ,etadata packet
+	std::vector<char> metadataPacket(MetadataPacketSize, 0);  // created a metadata packet
 	snprintf(metadataPacket.data(), MetadataPacketSize, "META|%s|%zu", fileName.c_str(), fileSize);
 	connection.SendPacket(metadataPacket.data(), metadataPacket.size()); // sending the metadata packets
 }
 
 void FileHandler::SendFileContent(const std::vector<char>& fileContent, ReliableConnection& connection)
 {
+	uint32_t md5Hash = CalculateMD5(fileContent);   // calculating md5 hash
+	connection.SendPacket(fileContent.data(), fileContent.size()); //Sending the file content
+
+	std::vector<char> ackPacket(AckPacketSize, 0);
+	snprintf(ackPacket.data(), ackPacket.size(), "ACK|%u", md5Hash);
+	connection.SendPacket(fileContent.data(), fileContent.size());   // sending acknowledgement
 }
 
 void FileHandler::ReceiveFileMetadata(std::string& fileName, size_t& fileSize, ReliableConnection& connection)
 {
+	std::vector<char> metadataPacket(MetadataPacketSize, 0);
+	connection.SendPacket(metadataPacket.data(), metadataPacket.size());
+
+	sscanf(metadataPacket.data(), "META|%[^|]|%zu", fileName.data(), &fileSize);  // parsing the metadata
 }
 
 void FileHandler::ReceiveFileContentAndVerify(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
