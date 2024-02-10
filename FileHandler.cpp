@@ -1,6 +1,6 @@
-#include "md5.h"
+
 #include "FileHandler.h"
-#include "Net.h"
+#include "md5.h"
 
 
 
@@ -40,6 +40,9 @@ uint32_t FileHandler::CalculateMD5(const std::vector<char>& data)
 
 void FileHandler::SendFileMetadata(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
 {
+	std::vector<char> metadataPacket(MetadataPacketSize, 0);  // created a ,etadata packet
+	snprintf(metadataPacket.data(), MetadataPacketSize, "META|%s|%zu", fileName.c_str(), fileSize);
+	connection.SendPacket(metadataPacket.data(), metadataPacket.size()); // sending the metadata packets
 }
 
 void FileHandler::SendFileContent(const std::vector<char>& fileContent, ReliableConnection& connection)

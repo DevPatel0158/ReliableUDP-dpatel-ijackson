@@ -31,6 +31,7 @@ public:
 	//defined a function that receives file content and validates verify the hash received from md5
 	static void ReceiveFileContentAndVerify(const std::string& fileName, size_t fileSize, ReliableConnection& connection);
 
+
 private:
 	//internal mehtod to support checksum method
 	uint32_t CalculateMD5Internal(const char* data, size_t size);
