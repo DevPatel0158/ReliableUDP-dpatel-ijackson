@@ -8,8 +8,15 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "FileHandler.h"    // included File handler file for handling the files in this code
 #include "Net.h"
 
+
+#pragma warning(disable : 4996)
+
+#include "md5.h"
+
+#define MD5_HASH_SIZE 33
 //#define SHOW_ACKS
 
 using namespace std;
@@ -113,13 +120,89 @@ private:
 	float penalty_reduction_accumulator;
 };
 
-// ----------------------------------------------
+
+
+/**
+ * @brief Check MD5 Hashes for File Integrity.
+ *
+ * This function reads the content of a file, computes its MD5 hash, and compares it
+ * with a provided MD5 hash for integrity verification.
+ *
+ * @param fileName Path to the file to be checked.
+ * @param fileSize Size of the file.
+ * @param md5Hash The expected MD5 hash to compare against.
+ * @return True if the computed MD5 hash matches the expected hash, false otherwise.
+ */
+bool checkMD5Hashes(char* fileName, int fileSize, char* md5Hash)
+{
+	FILE* inputFile = NULL;
+
+	char* fileContents;
+	fileContents = (char*)malloc(fileSize + 1);
+	//This might be wrong
+	fileContents[fileSize] = '\0';
+
+	bool isHashEqual = false;
+
+	string md5HashNum = "";
+	string md5HashNumCompare = "";
+
+	inputFile = fopen(fileName, "rb");
+	if (inputFile == NULL)
+	{
+		printf("Error: Could not read the file\n");
+		return 0;
+	}
+
+	//Maybe throw in a check in case the fileCotents is \0
+
+	while (!feof(inputFile))
+	{
+		fread(fileContents, sizeof(char), fileSize, inputFile);
+	}
+	md5HashNum = md5(fileContents);
+
+	if (md5HashNumCompare == md5Hash)
+	{
+		free(fileContents);
+
+		isHashEqual = true;
+	}
+	else
+	{
+		free(fileContents);
+
+		isHashEqual = false;
+	}
+	fclose(inputFile);
+	return isHashEqual;
+}
+
 
 int main(int argc, char* argv[])
 {
+	//DATA FIELDS
+	FILE* inputFile = NULL;
+	char fileName[MD5_HASH_SIZE];
+	char* fileContent;
+	char* MD5Hash;
+	int sizeOfInputFile = 0;
+	int packetStage = 0;
+	int packetStageServer = 0;
+	string hashMD5String;
+	int sendFileSize = 0;
+	int sizeOfFileName = 0;
+	FILE* outputFile = NULL;
+	char receivedFileName[MD5_HASH_SIZE];
+	char hashMD5Check[MD5_HASH_SIZE];
+	unsigned char packet[PacketSize];
+	unsigned char serverPacket[MD5_HASH_SIZE];
 	// parse command line
-
-	 // created a object of FileHandler class 
+	if (argc >= 3)
+	{
+		strcpy(fileName, argv[2]);
+	}
+	//FileHandler fileHandler;   // created a object of FileHandler class 
 
 	enum Mode
 	{
@@ -159,57 +242,39 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
-	if (mode == Client) {
+	if (mode == Client)
+	{
+
+
 		inputFile = fopen(fileName, "rb");
-		if (inputFile == NULL) {
-			printf("ERROR: Opening file\n");
-			return 0;
+		if (inputFile == NULL)
+		{
+			printf("ERROR: Cannot open file!\n");
 		}
+		else {
+			fseek(inputFile, 0, SEEK_END);
+			sizeOfInputFile = ftell(inputFile);
+			fseek(inputFile, 0, SEEK_SET);
 
-		while (sendAccumulator > 1.0f / sendRate) {
-			sizeOfFileName = strlen(fileName);
+			fileContent = (char*)malloc(sizeOfInputFile + 1);
+			fileContent[sizeOfInputFile] = 0;
 
-
-			memset(packet, 0, sizeof(packet));
-
-			if (packetStage == 0) {
-				sizeOfInputFile = sizeof(fileName);
-				packetStage++;
-				memcpy(packet, fileName, sizeOfFileName);
-				printf("Sending name of the file : %s (stage 1)\n", fileName);
-			}
-			else if (packetStage == 1) {
-				packetStage++;
-				memcpy(packet, &sizeOfInputFile, sizeOfFileName);
-				printf("Sending the size of the file! : %d (stage 2)\n", sizeOfInputFile);
-			}
-			else if (packetStage == 2) {
-				memcpy(packet, hashMD5String.c_str(), MD5_HASH_SIZE);
-				printf("Sending the hash of the file! : %s (stage 3)\n ", hashMD5String.c_str());
-				packetStage++;
-			}
-			else//writes the file data
+			while (!feof(inputFile))
 			{
-				sizeOfInputFile = fread(packet, sizeof(char), PacketSize, inputFile);//reads all the data into the packet.
-				if (sizeOfInputFile != 0)//checks for the breakfile flag and the size to change the data being sent.
-				{
-					packet[0] = 'A';
-					sizeOfInputFile--;
-				}
-				printf("OUT\n");
+				fread(fileContent, sizeof(char), sizeOfInputFile, inputFile);
 			}
-			printf("PACKET: %s PCAKET SIZE : %i", packet, sizeof(packet));
-			connection.SendPacket(packet, sizeof(packet));
-			sendAccumulator -= 1.0f / sendRate;
+			hashMD5String = md5(fileContent);
+			//maybe change
+
+
+			free(fileContent);
+			fclose(inputFile);
 		}
 	}
 
-		
 
-	/*
-	* Here I will implement the loading file and sending its metadata when connection is established
-	* Apart from that I will break the file into the chuncks in order to send it tot the sever
-	*/
+	if (mode == Mode::Client)
+		connection.Connect(address);
 	else
 		connection.Listen();
 
@@ -218,7 +283,7 @@ int main(int argc, char* argv[])
 	float statsAccumulator = 0.0f;
 
 	FlowControl flowControl;
-	
+
 	while (true)
 	{
 		// update flow control
@@ -234,9 +299,10 @@ int main(int argc, char* argv[])
 		{
 			// Here I will implement receiving the metadata of file when server is finally connected to the client
 			/*
-			* After receiving the metadata I will write out the received pieces 
+			* After receiving the metadata I will write out the received pieces
 			* finally I will verify the integrity of the file after receiving the file's metadata and content if its correct then I will send the file for acknowledgement
 			*/
+
 			flowControl.Reset();
 			printf("reset flow control\n");
 			connected = false;
@@ -257,33 +323,105 @@ int main(int argc, char* argv[])
 		// send and receive packets
 
 		sendAccumulator += DeltaTime;
-		
-		while (sendAccumulator > 1.0f / sendRate)
-		{
-			unsigned char packet[PacketSize];
-			
-			memset(packet, 0, sizeof(packet));
-			printf("Hello World");
-			for (size_t i = 0; i < PacketSize; ++i)
-			{
-				packet[i] = 'a' + i;
-			}
-			connection.SendPacket(packet, sizeof(packet));
-			
-			sendAccumulator -= 1.0f / sendRate;
-			
-		}
 
+		//This will be handling sending and receving PACKETS/INFORMATION!
+		if (mode == Client) {
+			inputFile = fopen(fileName, "rb");
+			if (inputFile == NULL) {
+				printf("ERROR: Opening file\n");
+				return 0;
+			}
+
+			while (sendAccumulator > 1.0f / sendRate) {
+				sizeOfFileName = strlen(fileName);
+
+				memset(packet, 0, sizeof(packet));
+
+				if (packetStage == 0) {
+					sizeOfInputFile = sizeof(fileName);
+					packetStage++;
+					memcpy(packet, fileName, sizeOfFileName);
+					printf("Transmitting file name: %s (stage 1)\n", fileName);
+				}
+				else if (packetStage == 1) {
+					packetStage++;
+					memcpy(packet, &sizeOfInputFile, sizeOfFileName);
+					printf("Transmitting file size: %d (stage 2)\n", sizeOfInputFile);
+				}
+				else if (packetStage == 2) {
+					memcpy(packet, hashMD5String.c_str(), MD5_HASH_SIZE);
+					printf("Transmitting file hash: %s (stage 3)\n ", hashMD5String.c_str());
+					packetStage++;
+				}
+				else
+				{
+					sizeOfInputFile = fread(packet, sizeof(char), PacketSize, inputFile);
+					if (sizeOfInputFile == 0) {
+
+						break;
+					}
+					sizeOfInputFile--;
+					printf("Transmitting file contents: %s \n", packet);
+
+				}
+
+				connection.SendPacket(packet, sizeof(packet));
+				sendAccumulator -= 1.0f / sendRate;
+			}
+		}
 		while (true)
 		{
-			unsigned char packet[256];
-			int bytes_read = connection.ReceivePacket(packet, sizeof(packet));
-			if (bytes_read == 0)
+
+			memset(serverPacket, 0, sizeof(serverPacket));
+			int bytes = connection.ReceivePacket(serverPacket, sizeof(serverPacket));
+
+			if (bytes == 0)
+			{
+				// No more data to read, break out of the loop
 				break;
-			printf("Received %s\n", packet);
+			}
+
+
+			if (mode == Server) {
+				if (packetStageServer == 0)
+				{
+					char fileNameOutput[256];
+					memcpy(fileNameOutput, serverPacket, bytes);
+					printf("Received file name: %s\n", fileNameOutput);
+					outputFile = fopen(fileNameOutput, "wb");
+					if (outputFile == NULL)
+					{
+						printf("ERROR: File cannot be Opened!\n");
+					}
+					packetStageServer++;
+				}
+				else if (packetStageServer == 1)
+				{
+					memcpy(&sendFileSize, serverPacket, bytes);
+					printf("Received file size: %i\n", sendFileSize);
+					packetStageServer++;
+				}
+				else if (packetStageServer == 2)
+				{
+					memcpy(hashMD5Check, serverPacket, bytes);
+					printf("Received file hash: %s\n", hashMD5Check);
+					packetStageServer++;
+				}
+				else
+				{
+					char printOut[200];
+					memcpy(printOut, serverPacket, bytes);
+					printf("Received file data: %s\n", printOut);
+					if (fwrite(serverPacket, sizeof(char), bytes, outputFile) == 0)
+					{
+						printf("ERROR: Writing to file\n");
+						return 0;
+					}
+				}
+			}
 		}
 
-		// show packets that were acked this frame
+
 
 #ifdef SHOW_ACKS
 		unsigned int* acks = NULL;
@@ -331,4 +469,9 @@ int main(int argc, char* argv[])
 	ShutdownSockets();
 
 	return 0;
+
+
 }
+
+
+

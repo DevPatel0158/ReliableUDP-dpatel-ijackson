@@ -45,7 +45,8 @@ void FileHandler::SendFileMetadata(const std::string& fileName, size_t fileSize,
 	std::vector<char> metadataPacket(MetadataPacketSize, 0);  // created a metadata packet
 	snprintf(metadataPacket.data(), MetadataPacketSize, "META|%s|%lu", fileName.c_str(), static_cast<unsigned long>(fileSize));
 
-	connection.SendPacket(reinterpret_cast<const unsigned char*>(metadataPacket.data()), metadataPacket.size()); // sending the metadata packets
+	connection.SendPacket(reinterpret_cast<const unsigned char*>(metadataPacket.data()), static_cast<int>(metadataPacket.size()));
+	// sending the metadata packets
 }
 
 void FileHandler::SendFileContent(const std::vector<char>& fileContent, ReliableConnection& connection)
@@ -65,8 +66,13 @@ void FileHandler::ReceiveFileMetadata(std::string& fileName, size_t& fileSize, R
 	std::vector<char> metadataPacket(MetadataPacketSize, 0);
 	connection.SendPacket(reinterpret_cast<const unsigned char*>(metadataPacket.data()), static_cast<int>(metadataPacket.size()));
 
+	char fileNameBuffer[256]; 
+	sscanf_s(metadataPacket.data(), "META|%[^|]|%llu", fileNameBuffer, static_cast<unsigned>(_TRUNCATE), &fileSize);
+	fileName = fileNameBuffer;
 
-	sscanf_s(metadataPacket.data(), "META|%[^|]|%zu", fileName.data(), &fileSize); // parsing the metadata
+
+
+	// parsing the metadata
 }
 
 void FileHandler::ReceiveFileContentAndVerify(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
@@ -80,10 +86,12 @@ void FileHandler::ReceiveFileContentAndVerify(const std::string& fileName, size_
 
 
 
-	connection.ReceivePacket(reinterpret_cast<unsigned char*>(ackPacket.data()), ackPacket.size()); //received acked packet 
+	connection.ReceivePacket(reinterpret_cast<unsigned char*>(ackPacket.data()), static_cast<int>(ackPacket.size()));
+	//received acked packet 
 
 	uint32_t sentMd5Hash;
-	sscanf_s(ackPacket.data(), "ACK|%u", &sentMd5Hash); // parsed received md5 hash 
+	sscanf_s(ackPacket.data(), "ACK|%u", &sentMd5Hash);
+	// parsed received md5 hash 
 
 	if (receivedMd5Hash == sentMd5Hash)     // checking and verifying integrity with comparing md5 hashes
 	{
@@ -99,7 +107,7 @@ void FileHandler::ReceiveFileContentAndVerify(const std::string& fileName, size_
 uint32_t FileHandler::CalculateMD5Internal(const char* data, size_t size)
 {
 	MD5 md5; //creating instatnce of md5 method 
-	md5.update(reinterpret_cast<const unsigned char*>(data), size);
+	md5.update(reinterpret_cast<const unsigned char*>(data), static_cast<MD5::size_type>(size));
 	md5.finalize();
 
 	//converted first 4 bytes of the hashi into uint32
