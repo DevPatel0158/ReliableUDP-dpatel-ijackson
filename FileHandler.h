@@ -1,3 +1,9 @@
+/*
+* Issac Jackson & Dev Patel
+* Student 8866936 & 8765267
+* February 10 2024
+* Assignment 01: This program ensures reliable transmission of user-selected files and implements a file integrity verification method, and calculates transmission time and speed.
+*/
 #pragma once
 
 #include <string>
@@ -12,6 +18,8 @@
 class FileHandler {
 public:
 	FileHandler();
+
+
 
 	//defined a method to read the file information
 	bool GetFileInfo(const std::string& filePath, std::string& fileName, size_t& fileSize);

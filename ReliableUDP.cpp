@@ -3,7 +3,12 @@
 	From "Networking for Game Programmers" - http://www.gaffer.org/networking-for-game-programmers
 	Author: Glenn Fiedler <gaffer@gaffer.org>
 */
-
+/*
+* Issac Jackson & Dev Patel
+* Student 8866936 & 8765267
+* February 10 2024
+* Assignment 01: This program ensures reliable transmission of user-selected files and implements a file integrity verification method, and calculates transmission time and speed.
+*/
 #include <iostream>
 #include <fstream>
 #include <string>
