@@ -14,9 +14,9 @@
 
 #pragma warning(disable : 4996)
 
-#include "md5.h"
+#include "md5.h"  //included the checksum header file
 
-#define MD5_HASH_SIZE 33
+#define MD5_HASH_SIZE 33   //defined the hash value's size 
 //#define SHOW_ACKS
 
 using namespace std;
@@ -147,7 +147,7 @@ bool checkMD5Hashes(char* fileName, int fileSize, char* md5Hash)
 	string md5HashNum = "";
 	string md5HashNumCompare = "";
 
-	inputFile = fopen(fileName, "rb");
+	inputFile = fopen(fileName, "rb");   //opened the file for reading
 	if (inputFile == NULL)
 	{
 		printf("Error: Could not read the file\n");
@@ -162,7 +162,7 @@ bool checkMD5Hashes(char* fileName, int fileSize, char* md5Hash)
 	}
 	md5HashNum = md5(fileContents);
 
-	if (md5HashNumCompare == md5Hash)
+	if (md5HashNumCompare == md5Hash)  //comparing hash values of the files to do integrity check
 	{
 		free(fileContents);
 

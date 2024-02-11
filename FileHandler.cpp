@@ -7,10 +7,22 @@ constexpr int AckPacketSize = 128;
 constexpr int MetadataPacketSize =64 ;
 
 
+/**
+ * @brief Default constructor for FileHandler.
+ */
 FileHandler::FileHandler()
 {
 }
 
+
+/**
+ * @brief Retrieves file information such as name and size.
+ *
+ * @param filePath Path to the file.
+ * @param fileName Reference to store the extracted file name.
+ * @param fileSize Reference to store the extracted file size.
+ * @return True if the file information is successfully retrieved, false otherwise.
+ */
 bool FileHandler::GetFileInfo(const std::string& filePath, std::string& fileName, size_t& fileSize)
 {
 	std::ifstream file(filePath, std::ios::binary | std::ios::ate);
@@ -23,6 +35,14 @@ bool FileHandler::GetFileInfo(const std::string& filePath, std::string& fileName
 	return false;
 }
 
+
+/**
+ * @brief Reads the content of a file into a vector of characters.
+ *
+ * @param filePath Path to the file.
+ * @param fileContent Reference to a vector to store the file content.
+ * @return True if the file content is successfully read, false otherwise.
+ */
 bool FileHandler::ReadFileContent(const std::string& filePath, std::vector<char>& fileContent)
 {
 	std::ifstream file(filePath, std::ios::binary);
@@ -34,12 +54,27 @@ bool FileHandler::ReadFileContent(const std::string& filePath, std::vector<char>
 	return false;
 }
 
+
+/**
+ * @brief Calculates the MD5 hash of the given data.
+ *
+ * @param data Vector of characters representing the data.
+ * @return MD5 hash as a 32-bit unsigned integer.
+ */
 uint32_t FileHandler::CalculateMD5(const std::vector<char>& data)
 {
 
 	return CalculateMD5Internal(data.data(), data.size());
 }
 
+
+/**
+ * @brief Sends file metadata over a reliable connection.
+ *
+ * @param fileName Name of the file.
+ * @param fileSize Size of the file.
+ * @param connection ReliableConnection object for sending metadata.
+ */
 void FileHandler::SendFileMetadata(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
 {
 	std::vector<char> metadataPacket(MetadataPacketSize, 0);  // created a metadata packet
@@ -49,6 +84,13 @@ void FileHandler::SendFileMetadata(const std::string& fileName, size_t fileSize,
 	// sending the metadata packets
 }
 
+
+/**
+ * @brief Sends file content and its MD5 hash over a reliable connection.
+ *
+ * @param fileContent Vector of characters representing the file content.
+ * @param connection ReliableConnection object for sending content and acknowledgment.
+ */
 void FileHandler::SendFileContent(const std::vector<char>& fileContent, ReliableConnection& connection)
 {
 	uint32_t md5Hash = CalculateMD5(fileContent);   // calculating md5 hash
@@ -61,6 +103,14 @@ void FileHandler::SendFileContent(const std::vector<char>& fileContent, Reliable
 
 }
 
+
+/**
+ * @brief Receives file metadata over a reliable connection.
+ *
+ * @param fileName Reference to store the received file name.
+ * @param fileSize Reference to store the received file size.
+ * @param connection ReliableConnection object for receiving metadata.
+ */
 void FileHandler::ReceiveFileMetadata(std::string& fileName, size_t& fileSize, ReliableConnection& connection)
 {
 	std::vector<char> metadataPacket(MetadataPacketSize, 0);
@@ -75,6 +125,14 @@ void FileHandler::ReceiveFileMetadata(std::string& fileName, size_t& fileSize, R
 	// parsing the metadata
 }
 
+
+/**
+ * @brief Receives file content, calculates MD5 hash, and verifies integrity over a reliable connection.
+ *
+ * @param fileName Name of the file for verification.
+ * @param fileSize Size of the file for verification.
+ * @param connection ReliableConnection object for receiving content and acknowledgment.
+ */
 void FileHandler::ReceiveFileContentAndVerify(const std::string& fileName, size_t fileSize, ReliableConnection& connection)
 {
 	std::vector<char> fileContent;
@@ -104,6 +162,14 @@ void FileHandler::ReceiveFileContentAndVerify(const std::string& fileName, size_
 	}
 }
 
+
+/**
+ * @brief Calculates the MD5 hash of the given data.
+ *
+ * @param data Pointer to the data.
+ * @param size Size of the data.
+ * @return MD5 hash as a 32-bit unsigned integer.
+ */
 uint32_t FileHandler::CalculateMD5Internal(const char* data, size_t size)
 {
 	MD5 md5; //creating instatnce of md5 method 
